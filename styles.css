@@ -3,7 +3,7 @@ body {
     background-color: #121212;
     color: #ffffff;
     margin: 0;
-    padding: 15px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -18,138 +18,59 @@ body {
     box-sizing: border-box;
 }
 h1, h2, h3 { text-align: center; color: #4CAF50; margin-top: 0; }
-
-/* Utility */
 .hidden { display: none !important; }
 
-/* Config Screen */
-.config-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-.config-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #2a2a2a;
-    padding: 10px;
-    border-radius: 8px;
-}
-.config-item input {
-    width: 50px;
-    padding: 5px;
-    border-radius: 5px;
-    border: 1px solid #444;
-    background: #111;
-    color: #fff;
-    text-align: center;
-}
+/* Config */
+.config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+.config-item { display: flex; justify-content: space-between; align-items: center; background: #2a2a2a; padding: 10px; border-radius: 8px; font-size: 0.9em; }
+.config-item input { width: 45px; padding: 5px; border-radius: 5px; border: 1px solid #444; background: #111; color: #fff; text-align: center; }
+.toggle-container { display: flex; justify-content: center; align-items: center; gap: 10px; background: #2a2a2a; padding: 12px; border-radius: 8px; margin-bottom: 20px; color: #ff9800; font-weight: bold;}
+.toggle-container input { width: 20px; height: 20px; }
 
-/* Top HUD */
-.hud {
-    display: flex;
-    justify-content: space-between;
-    background: #2a2a2a;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    font-weight: bold;
-}
-.hud div { font-size: 1.1em; }
+/* HUD & Visuals */
+.hud { display: flex; justify-content: space-between; background: #2a2a2a; padding: 15px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; }
 .score { color: #FFA500; }
+.hole-visual { height: 40px; background: linear-gradient(to right, #4CAF50 85%, #2E7D32 15%); border-radius: 20px; position: relative; margin-bottom: 20px; border: 2px solid #333; }
+.flag { position: absolute; right: 10px; top: 5px; font-size: 20px; }
+.ball { position: absolute; left: 0%; top: 10px; width: 16px; height: 16px; background: white; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.5); transition: left 0.5s ease-out; }
 
-/* Visualization */
-.hole-visual {
-    height: 40px;
-    background: linear-gradient(to right, #4CAF50 85%, #2E7D32 15%);
-    border-radius: 20px;
-    position: relative;
-    margin-bottom: 20px;
-    border: 2px solid #333;
-}
-.flag {
-    position: absolute;
-    right: 10px;
-    top: 5px;
-    font-size: 20px;
-}
-.ball {
-    position: absolute;
-    left: 0%;
-    top: 10px;
-    width: 16px;
-    height: 16px;
-    background: white;
-    border-radius: 50%;
-    box-shadow: 0 0 5px rgba(0,0,0,0.5);
-    transition: left 0.5s ease-out;
-}
-
-/* Shot Inputs */
+/* Inputs */
 label.section-title { display: block; margin: 15px 0 5px; font-weight: bold; color: #aaa; text-align: center;}
-select {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #333;
-    background: #2a2a2a;
-    color: #fff;
-    font-size: 1.1em;
-    text-align: center;
-}
+select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #2a2a2a; color: #fff; font-size: 1.1em; text-align: center; margin-bottom: 15px;}
 
-/* Radio Button Grids styled as Tap Buttons */
-.radio-group {
-    display: flex;
-    gap: 5px;
-    margin-bottom: 15px;
-}
+/* Tap Button Grids */
+.radio-group { display: flex; gap: 4px; margin-bottom: 10px; }
 .radio-group.horizontal { flex-direction: row; }
 .radio-group.vertical { flex-direction: column; }
-
 .radio-group input[type="radio"] { display: none; }
 .radio-group label {
     flex: 1;
-    background: #333;
-    color: #ccc;
     text-align: center;
-    padding: 12px 5px;
-    border-radius: 8px;
+    padding: 12px 0;
+    border-radius: 6px;
     font-size: 0.9em;
     cursor: pointer;
     border: 2px solid transparent;
-}
-.radio-group input[type="radio"]:checked + label {
-    background: #4CAF50;
-    color: white;
-    font-weight: bold;
-    border-color: #fff;
+    color: #bbb;
+    background: #333;
+    transition: 0.2s;
 }
 
-button.primary {
-    width: 100%;
-    background: #4CAF50;
-    color: white;
-    border: none;
-    padding: 15px;
-    border-radius: 8px;
-    font-size: 1.2em;
-    font-weight: bold;
-    margin-top: 15px;
-    cursor: pointer;
-}
+/* Color System - Inactive */
+.color-red { background: #3d1b1b !important; }
+.color-orange { background: #4a2d18 !important; }
+.color-yellow { background: #4a4218 !important; }
+.color-green { background: #1c3d1c !important; }
+
+/* Color System - Active */
+.radio-group input[type="radio"]:checked + label.color-red { background: #F44336 !important; color: white; border-color: #fff; font-weight: bold; }
+.radio-group input[type="radio"]:checked + label.color-orange { background: #FF9800 !important; color: white; border-color: #fff; font-weight: bold; }
+.radio-group input[type="radio"]:checked + label.color-yellow { background: #FFEB3B !important; color: black; border-color: #fff; font-weight: bold; }
+.radio-group input[type="radio"]:checked + label.color-green { background: #4CAF50 !important; color: white; border-color: #fff; font-weight: bold; }
+
+/* Vertical Spacing fix */
+.radio-group.vertical label { padding: 12px 10px; font-size: 1em; margin-bottom: 2px;}
+
+button.primary { width: 100%; background: #4CAF50; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.2em; font-weight: bold; margin-top: 10px; cursor: pointer; }
 button.primary:active { background: #45a049; }
-
-.log {
-    margin-top: 15px;
-    font-size: 0.9em;
-    color: #888;
-    max-height: 120px;
-    overflow-y: auto;
-    background: #1a1a1a;
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-}
+.log { margin-top: 15px; font-size: 0.9em; color: #888; max-height: 120px; overflow-y: auto; background: #1a1a1a; padding: 10px; border-radius: 8px; text-align: center; }
