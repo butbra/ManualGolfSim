@@ -6,33 +6,37 @@
     <title>Manual Golf Sim Pro</title>
     <link rel="stylesheet" href="styles.css"> 
     
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNDUgNzUgTDU1IDc1IEw1MiA5MCBMNDggOTAgWiIgZmlsbD0iI2IwYmVjNSIvPjxwYXRoIGQ9Ik00MiA2NSBDNDIgNzIsIDU4IDcyLCA1OCA2NSBMNDUgNjUgWiIgZmlsbD0iI2NmZDhkYyIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDAiIHI9IjI1IiBmaWxsPSIjZmZmZmZmIi8+PGNpcmNsZSBjeD0iNDIiIGN5PSIzMiIgcj0iMiIgZmlsbD0iI2VjZWZmMSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iMzAiIHI9IjIiIGZpbGw9IiNlY2VmZjEiLz48Y2lyY2xlIGN4PSI1OCIgY3k9IjM0IiByPSIyIiBmaWxsPSIjZWNlZmYxIi8+PGNpcmNsZSBjeD0iNDYiIGN5PSI0MiIgcj0iMiIgZmlsbD0iI2VjZWZmMSIvPjxjaXJjbGUgY3g9IjU0IiBjeT0iNDQiIHI9IjIiIGZpbGw9IiNlY2VmZjEiLz48Y2lyY2xlIGN4PSIzOCIgY3k9IjQ0IiByPSIyIiBmaWxsPSIjZWNlZmYxIi8+PGNpcmNsZSBjeD0iNjIiIGN5PSI0MiIgcj0iMiIgZmlsbD0iI2VjZWZmMSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTIiIHI9IjIiIGZpbGw9IiNlY2VmZjEiLz48cGF0aCBkPSJNMTUgNTUgUSAzMCA3NSA3NSAyNSIgc3Ryb2tlPSIjNGRiNmFjIiBzdHJva2Utd2lkdGg9IjQiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC44Ii8+PC9zdmc+">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNDUgNzUgTDU1IDc1IEw1MiA5MCBMNDggOTAgWiIgZmlsbD0iI2IwYmVjNSIvPjxwYXRoIGQ9Ik00MiA2NSBDNDIgNzIsIDU4IDcyLCA1OCA2NSBMNDUgNjUgWiIgZmlsbD0iI2NmZDhkYyIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDAiIHI9IjI1IiBmaWxsPSIjZmZmZmZmIi8+PGNpcmNsZSBjeD0iNDIiIGN5PSIzMiIgcj0iMiIgZmlsbD0iI2VjZWZmMSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iMzAiIHI9IjIiIGZpbGw9IiNlY2VmZjEiLz48Y2lyY2xlIGN4PSI1OCIgY3k9IjM0IiByPSIyIiBmaWxsPSIjZWNlZmYxIi8+PGNpcmNsZSBjeD0iNDYiIGN5PSI0MiIgcj0iMiIgZmlsbD0iI2VjZWZmMSIvPjxjaXJjbGUgY3g9IjU0IiBjeT0iNDQiIHI9IjIiIGZpbGw9IiNlY2VmZjEiLz48Y2lyY2xlIGN4PSIzOCIgY3k9IjQ0IiByPSIyIiBmaWxsPSIjZWNlZmYxIi8+PGNpcmNsZSBjeD0iNjIiIGN5PSI0MiIgcj0iMiIgZmlsbD0iI2VjZWZmMSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTIiIHI9IjIiIGZpbGw9IiNlY2VmZjEiLz48cGF0aCBkPSJNMTUgNTUgUSAzMCA3NSA3NSAyNSIgc3Ryb2tlPSIjNGRiNmFjIiBzdHJva2Utd2lkdGg9IjQiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC44Ii8+PC9zdmc+">
+
     <style>
-        .app-logo-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin: 20px auto 10px auto;
-            padding: 10px;
+        /* Leaderboard Styles */
+        .leaderboard-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #444;
         }
-        .golf-logo-svg {
-            width: 60px;
-            height: 60px;
-            fill: #64b5f6; /* Modern golf blue accent */
-            filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3));
-            margin-bottom: 8px;
-        }
-        .app-title {
-            font-size: 1.4em;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
             color: #fff;
-            margin: 0;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            font-size: 0.9em;
         }
-        .app-title span {
-            color: #4db6ac; /* Mint green text accent for 'Sim Pro' */
+        .leaderboard-table th, .leaderboard-table td {
+            padding: 10px;
+            border-bottom: 1px solid #333;
+            text-align: center;
+        }
+        .leaderboard-table th {
+            background-color: #222;
+            color: #4db6ac;
+        }
+        .clear-btn {
+            background-color: #d32f2f;
+            font-size: 0.8em;
+            padding: 8px;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -40,24 +44,6 @@
 
 <div class="container" id="config-screen">
     
-    <div class="app-logo-container">
-        <svg class="golf-logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <path d="M45 75 L55 75 L52 90 L48 90 Z" fill="#b0bec5"/>
-            <path d="M42 65 C42 72, 58 72, 58 65 L45 65 Z" fill="#cfd8dc"/>
-            <circle cx="50" cy="40" r="25" fill="#ffffff"/>
-            <circle cx="42" cy="32" r="2" fill="#eceff1"/>
-            <circle cx="50" cy="30" r="2" fill="#eceff1"/>
-            <circle cx="58" cy="34" r="2" fill="#eceff1"/>
-            <circle cx="46" cy="42" r="2" fill="#eceff1"/>
-            <circle cx="54" cy="44" r="2" fill="#eceff1"/>
-            <circle cx="38" cy="44" r="2" fill="#eceff1"/>
-            <circle cx="62" cy="42" r="2" fill="#eceff1"/>
-            <circle cx="50" cy="52" r="2" fill="#eceff1"/>
-            <path d="M15 55 Q 30 75 75 25" stroke="#4db6ac" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.8"/>
-        </svg>
-        <h2 class="app-title">Manual Golf <span>Sim Pro</span></h2>
-    </div>
-
     <h1>Club Config</h1>
     
     <div style="margin-bottom: 15px; text-align: center;">
@@ -69,17 +55,18 @@
     </div>
 
     <div style="margin-bottom: 20px; text-align: center;">
-        <label for="round-length" style="display: block; font-weight: bold; margin-bottom: 5px; color: #fff;">Round Length</label>
+        <label for="round-length" style="display: block; font-weight: bold; margin-bottom: 5px; color: #fff;">Round Length & Mode</label>
         <select id="round-length" style="width: 100%; max-width: 200px; padding: 10px; border-radius: 5px; background: #222; color: #fff; border: 1px solid #444; font-size: 1em;">
-            <option value="9">9 Holes (Randomized)</option>
-            <option value="18">18 Holes (Randomized)</option>
+            <option value="9">9 Holes</option>
+            <option value="18">18 Holes</option>
+            <option value="9-obstacles">9 Holes (Obstacles)</option>
+            <option value="18-obstacles">18 Holes (Obstacles)</option>
         </select>
     </div>
 
     <p style="text-align: center; color: #aaa; font-size: 0.9em;">Set your standard distances.</p>
     
-    <div class="config-grid" id="club-inputs">
-        </div>
+    <div class="config-grid" id="club-inputs"></div>
 
     <div class="toggle-container">
         <input type="checkbox" id="disable-driver" checked>
@@ -90,6 +77,24 @@
     </div>
     
     <button class="primary" onclick="startGame()">Save & Start Round</button>
+
+    <div class="leaderboard-section">
+        <h2 style="text-align: center; color: #fff;">Course Records</h2>
+        <table class="leaderboard-table" id="leaderboard-table">
+            <thead>
+                <tr>
+                    <th>Title / Note</th>
+                    <th>Mode</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+        <div style="text-align: center;">
+            <button class="primary clear-btn" onclick="clearLeaderboard()">Clear Leaderboard</button>
+        </div>
+    </div>
 </div>
 
 <div class="container hidden" id="play-screen">
@@ -99,9 +104,11 @@
         <div class="score" id="score-info">E</div>
     </div>
 
-    <div style="text-align: center; font-size: 2.5em; font-weight: bold; color: #fff; margin: 10px 0;" id="distance-display">
+    <div style="text-align: center; font-size: 2.5em; font-weight: bold; color: #fff; margin: 10px 0 0 0;" id="distance-display">
         400y
     </div>
+    
+    <div id="hazard-display" style="text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 1.1em; height: 1.2em; text-transform: uppercase;"></div>
 
     <div class="hole-visual">
         <div class="flag">⛳</div>
