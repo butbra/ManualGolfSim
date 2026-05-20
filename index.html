@@ -5,10 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Manual Golf Sim Pro</title>
     <link rel="stylesheet" href="styles.css"> 
+    
+    <style>
+        .app-logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto 10px auto;
+            padding: 10px;
+        }
+        .golf-logo-svg {
+            width: 60px;
+            height: 60px;
+            fill: #64b5f6; /* Modern golf blue accent */
+            filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.3));
+            margin-bottom: 8px;
+        }
+        .app-title {
+            font-size: 1.4em;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #fff;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .app-title span {
+            color: #4db6ac; /* Mint green text accent for 'Sim Pro' */
+        }
+    </style>
 </head>
 <body>
 
 <div class="container" id="config-screen">
+    
+    <div class="app-logo-container">
+        <svg class="golf-logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path d="M45 75 L55 75 L52 90 L48 90 Z" fill="#b0bec5"/>
+            <path d="M42 65 C42 72, 58 72, 58 65 L45 65 Z" fill="#cfd8dc"/>
+            <circle cx="50" cy="40" r="25" fill="#ffffff"/>
+            <circle cx="42" cy="32" r="2" fill="#eceff1"/>
+            <circle cx="50" cy="30" r="2" fill="#eceff1"/>
+            <circle cx="58" cy="34" r="2" fill="#eceff1"/>
+            <circle cx="46" cy="42" r="2" fill="#eceff1"/>
+            <circle cx="54" cy="44" r="2" fill="#eceff1"/>
+            <circle cx="38" cy="44" r="2" fill="#eceff1"/>
+            <circle cx="62" cy="42" r="2" fill="#eceff1"/>
+            <circle cx="50" cy="52" r="2" fill="#eceff1"/>
+            <path d="M15 55 Q 30 75 75 25" stroke="#4db6ac" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.8"/>
+        </svg>
+        <h2 class="app-title">Manual Golf <span>Sim Pro</span></h2>
+    </div>
+
     <h1>Club Config</h1>
     
     <div style="margin-bottom: 15px; text-align: center;">
