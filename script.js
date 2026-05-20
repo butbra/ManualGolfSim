@@ -51,6 +51,20 @@ function loadProfileClubs() {
             </div>
         `;
     });
+
+    // Automatically toggle checkboxes based on the selected profile
+    const disableDriverCheckbox = document.getElementById('disable-driver');
+    const disable3WoodCheckbox = document.getElementById('disable-3wood');
+    
+    if (disableDriverCheckbox && disable3WoodCheckbox) {
+        if (profile === 'brandon') {
+            disableDriverCheckbox.checked = true;
+            disable3WoodCheckbox.checked = true;
+        } else if (profile === 'tyler') {
+            disableDriverCheckbox.checked = false;
+            disable3WoodCheckbox.checked = false;
+        }
+    }
 }
 
 function startGame() {
@@ -111,7 +125,6 @@ function updateUI() {
     }
     clubSelect.value = selectedIndex;
 
-    // Instantly refresh calculations when toggling between clubs manually
     clubSelect.onchange = () => {
         renderContactMenu();
         updateTargetPercentageDisplay();
@@ -137,7 +150,6 @@ function renderContactMenu() {
     const clubDist = myClubs[clubIndex].distance;
 
     if (distanceToPin < clubDist) {
-        // SCALED / CONTROL TOUCH INTERFACE
         container.innerHTML = `
             <div class="radio-group vertical">
                 <input type="radio" id="chip1" name="contact" value="way-long"><label class="color-red" for="chip1">Way Too Long</label>
@@ -150,7 +162,6 @@ function renderContactMenu() {
             </div>
         `;
     } else {
-        // STANDARD FULL SWING INTERFACE
         container.innerHTML = `
             <div class="radio-group vertical">
                 <input type="radio" id="con1" name="contact" value="perfect" checked><label class="color-green" for="con1">Perfect Contact</label>
@@ -194,7 +205,6 @@ function hitShot() {
     const directionTier = parseInt(document.querySelector('input[name="direction"]:checked').value);
     const contact = document.querySelector('input[name="contact"]:checked').value;
     
-    // Save state before hitting to track special green rules
     const startingDistanceOfShot = distanceToPin;
     const isPartialShot = distanceToPin < clubDist;
 
@@ -218,7 +228,6 @@ function hitShot() {
     let rawShotDistance = 0;
 
     if (isPartialShot) {
-        // Controlled touch scaling calculations around target pin
         let powerMod = 1.0;
         if (contact === 'way-long') powerMod = 1.60;
         if (contact === 'long') powerMod = 1.30;
@@ -229,11 +238,9 @@ function hitShot() {
 
         rawShotDistance = Math.round(distanceToPin * powerMod);
     } else {
-        // Full standard swing probabilistic distributions
         let contactMod = 1.0;
         
         if (contact === 'perfect') {
-            // Adds a small layer of variability to full swing perfect hits (98% to 102%)
             contactMod = 0.98 + (Math.random() * 0.04); 
         } 
         else if (contact === 'good') {
@@ -249,7 +256,6 @@ function hitShot() {
         rawShotDistance = Math.round(clubDist * contactMod);
     }
     
-    // LAW OF COSINES 2D TRIANGULATION
     let newDistSquared = Math.pow(distanceToPin, 2) + Math.pow(rawShotDistance, 2) - (2 * distanceToPin * rawShotDistance * Math.cos(angleRadians));
     distanceToPin = Math.round(Math.sqrt(newDistSquared));
     
@@ -259,16 +265,13 @@ function hitShot() {
 
     updateUI();
 
-    // Check if on green (15 yards threshold)
     if (distanceToPin <= 15) {
-        // Player is only eligible for a 1-putt if the shot originated from less than 30 yards away
         const eligibleForOnePutt = startingDistanceOfShot < 30;
         handleGreen(eligibleForOnePutt);
     }
 }
 
 function handleGreen(eligibleForOnePutt) {
-    // Only award 1 putt if the ball landed within 1 yard AND the shot came from less than 30 yards out
     let putts = (distanceToPin <= 1 && eligibleForOnePutt) ? 1 : 2;
     
     strokesThisHole += putts;
