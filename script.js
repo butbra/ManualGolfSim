@@ -151,8 +151,8 @@ function hitShot() {
     let angleDegrees = 0;
     const absDir = Math.abs(directionTier);
     if (absDir === 1) angleDegrees = 10; // Slight
-    if (absDir === 2) angleDegrees = 25; // Normal
-    if (absDir === 3) angleDegrees = 50; // Way offline (Severely punishes triangle hypotenuse)
+    if (absDir === 2) angleDegrees = 20; // Normal
+    if (absDir === 3) angleDegrees = 30; // Way offline 
     
     // Convert angle to radians for Math.cos()
     const angleRadians = angleDegrees * (Math.PI / 180);
