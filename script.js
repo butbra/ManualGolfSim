@@ -90,6 +90,9 @@ function updateUI() {
     }
     clubSelect.value = selectedIndex;
 
+    // Force contact menu to re-render if user manually changes clubs
+    clubSelect.onchange = renderContactMenu;
+
     renderContactMenu();
     
     const percentCovered = ((holeStartDist - distanceToPin) / holeStartDist) * 100;
@@ -101,10 +104,16 @@ function updateUI() {
 
 function renderContactMenu() {
     const container = document.getElementById('contact-container');
-    const minClubDist = myClubs[0].distance;
+    const clubSelect = document.getElementById('club-select');
+    
+    // Safety check for initial setup timing
+    if (!clubSelect || clubSelect.value === "") return;
 
-    if (distanceToPin < minClubDist) {
-        // CHIPPING MODE
+    const clubIndex = clubSelect.value;
+    const clubDist = myClubs[clubIndex].distance;
+
+    // If distance to pin is LESS than the selected club's capacity, show the centered perfect distance layout
+    if (distanceToPin < clubDist) {
         container.innerHTML = `
             <div class="radio-group vertical">
                 <input type="radio" id="chip1" name="contact" value="way-long"><label class="color-red" for="chip1">Way Too Long</label>
@@ -117,7 +126,7 @@ function renderContactMenu() {
             </div>
         `;
     } else {
-        // FULL SWING MODE
+        // FULL SWING MODE (Distance to pin matches or exceeds selected club max capacity)
         container.innerHTML = `
             <div class="radio-group vertical">
                 <input type="radio" id="con1" name="contact" value="perfect" checked><label class="color-green" for="con1">Perfect Contact</label>
@@ -144,36 +153,31 @@ function hitShot() {
     
     const directionTier = parseInt(document.querySelector('input[name="direction"]:checked').value);
     const contact = document.querySelector('input[name="contact"]:checked').value;
-    const isChipping = distanceToPin < myClubs[0].distance;
+    
+    // Check if we are running a controlled distance scaling calculation
+    const isPartialShot = distanceToPin < clubDist;
 
     // --- 2D GEOMETRY MATH ENGINE ---
-    // Establish deviation angle based on left/right selection using uniform distributions
     let angleDegrees = 0;
     const absDir = Math.abs(directionTier);
     
     if (absDir === 1) {
-        // Slight miss: 10 degrees +/- 4 (Range: 6 to 14)
         angleDegrees = 10 + (Math.random() * 8 - 4); 
     } 
     else if (absDir === 2) {
-        // Normal miss: 20 degrees +/- 4 (Range: 16 to 24)
         angleDegrees = 20 + (Math.random() * 8 - 4); 
     } 
     else if (absDir === 3) {
-        // Way offline: 30 degrees +/- 4 (Range: 26 to 34)
         angleDegrees = 30 + (Math.random() * 8 - 4); 
     }
     
-    // Round to one decimal place for a clean log
     angleDegrees = Math.round(angleDegrees * 10) / 10;
-
-    // Convert angle to radians for Math.cos()
     const angleRadians = angleDegrees * (Math.PI / 180);
 
     let rawShotDistance = 0;
 
-    if (isChipping) {
-        // Chipping logic scales based on distance to pin
+    if (isPartialShot) {
+        // Controlled touch calculations scaled directly around pin target distance
         let powerMod = 1.0;
         if (contact === 'way-long') powerMod = 1.60;
         if (contact === 'long') powerMod = 1.30;
@@ -184,35 +188,30 @@ function hitShot() {
 
         rawShotDistance = Math.round(distanceToPin * powerMod);
     } else {
-        // Normal swing logic using probabilistic distributions
+        // Full standard swing probabilistic distribution mechanics
         let contactMod = 1.0;
         
         if (contact === 'perfect') {
             contactMod = 1.0; 
         } 
         else if (contact === 'good') {
-            // Triangle distribution: Peaks strongly at 0.90. Range: 0.80 to 1.00
             contactMod = 0.80 + ((Math.random() + Math.random()) * 0.10);
         } 
         else if (contact === 'subpar') {
-            // Uniform distribution: Evenly spread anywhere between 0.60 and 0.80
             contactMod = 0.60 + (Math.random() * 0.20);
         } 
         else if (contact === 'terrible') {
-            // Uniform distribution: Evenly spread anywhere between 0.20 and 0.50
             contactMod = 0.20 + (Math.random() * 0.30);
         }
 
         rawShotDistance = Math.round(clubDist * contactMod);
     }
     
-    // LAW OF COSINES: Calculate actual 2D distance remaining to hole
-    // c^2 = a^2 + b^2 - 2ab * cos(C)
+    // LAW OF COSINES 2D TRIANGULATION ENGINE
     let newDistSquared = Math.pow(distanceToPin, 2) + Math.pow(rawShotDistance, 2) - (2 * distanceToPin * rawShotDistance * Math.cos(angleRadians));
-    
     distanceToPin = Math.round(Math.sqrt(newDistSquared));
     
-    const modeString = isChipping ? "Chipped" : "Swung";
+    const modeString = isPartialShot ? "Controlled" : "Swung";
     const logEntry = `Shot ${strokesThisHole}: ${clubName}. ${modeString} ${rawShotDistance}y (Offline angle: ${angleDegrees}°). <br>`;
     document.getElementById('shot-log').innerHTML = logEntry + document.getElementById('shot-log').innerHTML;
 
@@ -225,7 +224,6 @@ function hitShot() {
 }
 
 function handleGreen() {
-    // 2 putts unless you chip it within 1 yard (<= 1)
     let putts = (distanceToPin <= 1) ? 1 : 2;
     
     strokesThisHole += putts;
