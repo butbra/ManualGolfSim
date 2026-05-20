@@ -1,17 +1,11 @@
 // --- DATA & STATE ---
 const defaultClubs = [
-    { name: "60 Degree", default: 70 },
-    { name: "52 Degree", default: 110 },
-    { name: "Pitching Wedge", default: 125 },
-    { name: "9 Iron", default: 140 },
-    { name: "8 Iron", default: 155 },
-    { name: "7 Iron", default: 170 },
-    { name: "6 Iron", default: 185 },
-    { name: "5 Iron", default: 200 },
-    { name: "4 Iron", default: 215 },
-    { name: "4 Hybrid", default: 220 },
-    { name: "3 Wood", default: 235 },
-    { name: "Driver", default: 285 }
+    { name: "60 Degree", default: 70 }, { name: "52 Degree", default: 110 },
+    { name: "Pitching Wedge", default: 125 }, { name: "9 Iron", default: 140 },
+    { name: "8 Iron", default: 155 }, { name: "7 Iron", default: 170 },
+    { name: "6 Iron", default: 185 }, { name: "5 Iron", default: 200 },
+    { name: "4 Iron", default: 215 }, { name: "4 Hybrid", default: 220 },
+    { name: "3 Wood", default: 235 }, { name: "Driver", default: 285 }
 ];
 
 const course = [
@@ -45,14 +39,16 @@ window.onload = () => {
 function startGame() {
     myClubs = [];
     const disableDriver = document.getElementById('disable-driver').checked;
+    const disable3Wood = document.getElementById('disable-3wood').checked;
 
     defaultClubs.forEach((club, index) => {
-        if (disableDriver && club.name === "Driver") return; // Skip driver if checked
+        if (disableDriver && club.name === "Driver") return; 
+        if (disable3Wood && club.name === "3 Wood") return; 
+        
         const dist = parseInt(document.getElementById(`club-${index}`).value) || club.default;
         myClubs.push({ name: club.name, distance: dist });
     });
     
-    // Swap Screens
     document.getElementById('config-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
 
@@ -71,7 +67,6 @@ function loadHole(index) {
     distanceToPin = course[currentHoleIndex].dist;
     holeStartDist = course[currentHoleIndex].dist;
 
-    // Reset UI Texts
     document.getElementById('hole-info').innerText = `Hole ${course[currentHoleIndex].hole}`;
     document.getElementById('par-info').innerText = `Par ${course[currentHoleIndex].par}`;
     document.getElementById('score-info').innerText = formatScore(totalScoreVsPar);
@@ -83,7 +78,6 @@ function loadHole(index) {
 function updateUI() {
     document.getElementById('distance-display').innerText = distanceToPin + "y";
     
-    // 1. Auto Select Club
     const clubSelect = document.getElementById('club-select');
     clubSelect.innerHTML = '';
     let selectedIndex = myClubs.length - 1; 
@@ -96,15 +90,12 @@ function updateUI() {
     }
     clubSelect.value = selectedIndex;
 
-    // 2. Render Contact Menu (Chipping vs Full Swing)
     renderContactMenu();
     
-    // 3. Update Ball Visuals
     const percentCovered = ((holeStartDist - distanceToPin) / holeStartDist) * 100;
     let visualPercent = Math.max(0, Math.min(percentCovered, 95));
     document.getElementById('ball-icon').style.left = visualPercent + '%';
 
-    // 4. Reset Direction to straight
     document.getElementById('dir0').checked = true;
 }
 
@@ -113,16 +104,16 @@ function renderContactMenu() {
     const minClubDist = myClubs[0].distance;
 
     if (distanceToPin < minClubDist) {
-        // CHIPPING MODE (Yardage is less than lowest club)
+        // CHIPPING MODE
         container.innerHTML = `
             <div class="radio-group vertical">
-                <input type="radio" id="chip1" name="contact" value="way-hard"><label class="color-red" for="chip1">Way Too Hard</label>
-                <input type="radio" id="chip2" name="contact" value="hard"><label class="color-orange" for="chip2">Too Hard</label>
-                <input type="radio" id="chip3" name="contact" value="slight-hard"><label class="color-yellow" for="chip3">Slightly Hard</label>
-                <input type="radio" id="chip4" name="contact" value="perfect" checked><label class="color-green" for="chip4">Perfect Weight</label>
-                <input type="radio" id="chip5" name="contact" value="slight-light"><label class="color-yellow" for="chip5">Slightly Light</label>
-                <input type="radio" id="chip6" name="contact" value="light"><label class="color-orange" for="chip6">Too Light</label>
-                <input type="radio" id="chip7" name="contact" value="way-light"><label class="color-red" for="chip7">Way Too Light</label>
+                <input type="radio" id="chip1" name="contact" value="way-long"><label class="color-red" for="chip1">Way Too Long</label>
+                <input type="radio" id="chip2" name="contact" value="long"><label class="color-orange" for="chip2">Too Long</label>
+                <input type="radio" id="chip3" name="contact" value="slight-long"><label class="color-yellow" for="chip3">Slightly Long</label>
+                <input type="radio" id="chip4" name="contact" value="perfect" checked><label class="color-green" for="chip4">Perfect</label>
+                <input type="radio" id="chip5" name="contact" value="slight-short"><label class="color-yellow" for="chip5">Slightly Short</label>
+                <input type="radio" id="chip6" name="contact" value="short"><label class="color-orange" for="chip6">Too Short</label>
+                <input type="radio" id="chip7" name="contact" value="way-short"><label class="color-red" for="chip7">Way Too Short</label>
             </div>
         `;
     } else {
@@ -155,55 +146,61 @@ function hitShot() {
     const contact = document.querySelector('input[name="contact"]:checked').value;
     const isChipping = distanceToPin < myClubs[0].distance;
 
-    // --- MATH ENGINE ---
-    // Calculate Direction Modifier (0 is center, 1 is yellow, 2 is orange, 3 is red)
-    let dirMod = 1.0;
+    // --- 2D GEOMETRY MATH ENGINE ---
+    // Establish deviation angle based on left/right selection
+    let angleDegrees = 0;
     const absDir = Math.abs(directionTier);
-    if (absDir === 1) dirMod = 0.95; // Yellow penalty
-    if (absDir === 2) dirMod = 0.85; // Orange penalty
-    if (absDir === 3) dirMod = 0.70; // Red penalty
+    if (absDir === 1) angleDegrees = 10; // Slight
+    if (absDir === 2) angleDegrees = 25; // Normal
+    if (absDir === 3) angleDegrees = 50; // Way offline (Severely punishes triangle hypotenuse)
+    
+    // Convert angle to radians for Math.cos()
+    const angleRadians = angleDegrees * (Math.PI / 180);
 
-    let shotDistance = 0;
+    let rawShotDistance = 0;
 
     if (isChipping) {
-        // Chipping logic (Power modifies remaining distance to pin, not club max)
+        // Chipping logic scales based on distance to pin
         let powerMod = 1.0;
-        if (contact === 'way-hard') powerMod = 1.50;
-        if (contact === 'hard') powerMod = 1.25;
-        if (contact === 'slight-hard') powerMod = 1.10;
-        if (contact === 'slight-light') powerMod = 0.85;
-        if (contact === 'light') powerMod = 0.65;
-        if (contact === 'way-light') powerMod = 0.40;
+        if (contact === 'way-long') powerMod = 1.60;
+        if (contact === 'long') powerMod = 1.30;
+        if (contact === 'slight-long') powerMod = 1.10;
+        if (contact === 'slight-short') powerMod = 0.85;
+        if (contact === 'short') powerMod = 0.60;
+        if (contact === 'way-short') powerMod = 0.35;
 
-        shotDistance = Math.round(distanceToPin * powerMod * dirMod);
+        rawShotDistance = Math.round(distanceToPin * powerMod);
     } else {
-        // Normal swing logic
+        // Normal swing logic scales based on club max distance
         let contactMod = 1.0;
         if (contact === 'good') contactMod = 0.90;
         if (contact === 'subpar') contactMod = 0.70;
         if (contact === 'terrible') contactMod = 0.40;
 
-        shotDistance = Math.round(clubDist * contactMod * dirMod);
+        rawShotDistance = Math.round(clubDist * contactMod);
     }
     
-    // Absolute distance remaining (if they hit over the green, it turns positive again)
-    distanceToPin = Math.abs(distanceToPin - shotDistance);
+    // LAW OF COSINES: Calculate actual 2D distance remaining to hole
+    // c^2 = a^2 + b^2 - 2ab * cos(C)
+    let newDistSquared = Math.pow(distanceToPin, 2) + Math.pow(rawShotDistance, 2) - (2 * distanceToPin * rawShotDistance * Math.cos(angleRadians));
+    
+    distanceToPin = Math.round(Math.sqrt(newDistSquared));
     
     const modeString = isChipping ? "Chipped" : "Swung";
-    const logEntry = `Shot ${strokesThisHole}: ${clubName}. ${modeString} ${shotDistance}y. <br>`;
+    const logEntry = `Shot ${strokesThisHole}: ${clubName}. ${modeString} ${rawShotDistance}y (Total offline angle: ${angleDegrees}°). <br>`;
     document.getElementById('shot-log').innerHTML = logEntry + document.getElementById('shot-log').innerHTML;
 
     updateUI();
 
+    // Check if on green (20 yards threshold)
     if (distanceToPin <= 20) {
         handleGreen();
     }
 }
 
 function handleGreen() {
-    let putts = 2;
-    if (distanceToPin <= 3) putts = 1;
-    if (distanceToPin > 12) putts = 3;
+    // 2 putts unless you chip it within 1 yard (<= 1)
+    let putts = (distanceToPin <= 1) ? 1 : 2;
     
     strokesThisHole += putts;
     const scoreThisHole = strokesThisHole - course[currentHoleIndex].par;
