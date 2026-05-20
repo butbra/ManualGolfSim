@@ -25,16 +25,20 @@ const baseCourse = [
 ]; 
 
 let myClubs = [];
-let activeCourse = []; // Dynamically built randomized array
+let activeCourse = []; 
 let currentHoleIndex = 0;
 let distanceToPin = 0;
 let holeStartDist = 0;
 let strokesThisHole = 0;
 let totalScoreVsPar = 0;
 
+let obstaclesEnabled = false;
+let currentHazard = 'none'; 
+
 // --- INITIALIZATION ---
 window.onload = () => {
     loadProfileClubs();
+    loadLeaderboard();
 };
 
 function loadProfileClubs() {
@@ -67,7 +71,57 @@ function loadProfileClubs() {
     }
 }
 
-// Fisher-Yates Randomization Algorithm
+// --- LEADERBOARD LOGIC ---
+function loadLeaderboard() {
+    const tbody = document.querySelector('#leaderboard-table tbody');
+    if (!tbody) return;
+    
+    let leaderboard = JSON.parse(localStorage.getItem('golfLeaderboard')) || [];
+    tbody.innerHTML = '';
+    
+    if (leaderboard.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="color: #aaa;">No rounds completed yet.</td></tr>';
+        return;
+    }
+    
+    leaderboard.forEach(entry => {
+        tbody.innerHTML += `<tr>
+            <td>
+                <strong>${entry.title}</strong><br>
+                <span style="font-size: 0.8em; color: #aaa;">${entry.date}</span>
+            </td>
+            <td>${entry.mode}</td>
+            <td style="font-size: 1.2em; font-weight: bold; color: ${(entry.rawScore > 0) ? '#ff5252' : (entry.rawScore < 0) ? '#69f0ae' : '#fff'};">${entry.scoreStr}</td>
+        </tr>`;
+    });
+}
+
+function saveToLeaderboard(titleInput, scoreStr, rawScore) {
+    const modeSelect = document.getElementById('round-length');
+    const mode = modeSelect.options[modeSelect.selectedIndex].text;
+    
+    let leaderboard = JSON.parse(localStorage.getItem('golfLeaderboard')) || [];
+    
+    leaderboard.push({
+        title: titleInput,
+        mode: mode,
+        scoreStr: scoreStr,
+        rawScore: rawScore,
+        date: new Date().toLocaleDateString()
+    });
+    
+    leaderboard.sort((a, b) => a.rawScore - b.rawScore);
+    
+    localStorage.setItem('golfLeaderboard', JSON.stringify(leaderboard));
+}
+
+function clearLeaderboard() {
+    if (confirm("Are you sure you want to clear the entire leaderboard?")) {
+        localStorage.removeItem('golfLeaderboard');
+        loadLeaderboard();
+    }
+}
+
 function shuffleArray(array) {
     let shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -94,17 +148,16 @@ function startGame() {
         myClubs.push({ name: club.name, distance: dist });
     });
 
-    // Generate Randomized Course Routing Map
-    const roundLength = parseInt(document.getElementById('round-length').value) || 9;
+    const roundMode = document.getElementById('round-length').value;
+    const roundLength = roundMode.startsWith('18') ? 18 : 9;
+    obstaclesEnabled = roundMode.includes('obstacles');
     activeCourse = [];
 
-    // Shuffle front 9
     let front9 = shuffleArray(baseCourse);
     front9.forEach((holeData, index) => {
         activeCourse.push({ hole: index + 1, par: holeData.par, dist: holeData.dist });
     });
 
-    // Shuffle back 9 if 18 holes are requested
     if (roundLength === 18) {
         let back9 = shuffleArray(baseCourse);
         back9.forEach((holeData, index) => {
@@ -120,13 +173,22 @@ function startGame() {
 
 function loadHole(index) {
     if (index >= activeCourse.length) {
-        alert(`Round Complete! Final Score: ${formatScore(totalScoreVsPar)}`);
+        const finalScoreStr = formatScore(totalScoreVsPar);
+        
+        let titleInput = prompt(`Round Complete!\nFinal Score: ${finalScoreStr}\n\nEnter a title or note to save to the leaderboard (e.g., Name, Date, Conditions):`);
+        
+        if (!titleInput || titleInput.trim() === "") {
+            titleInput = "Anonymous Round";
+        }
+        
+        saveToLeaderboard(titleInput.trim(), finalScoreStr, totalScoreVsPar);
         location.reload(); 
         return;
     }
     
     currentHoleIndex = index;
     strokesThisHole = 0;
+    currentHazard = 'none'; 
     distanceToPin = activeCourse[currentHoleIndex].dist;
     holeStartDist = activeCourse[currentHoleIndex].dist;
 
@@ -140,6 +202,15 @@ function loadHole(index) {
 
 function updateUI() {
     document.getElementById('distance-display').innerText = distanceToPin + "y";
+    
+    const hazardDisplay = document.getElementById('hazard-display');
+    if (currentHazard === 'bunker') {
+        hazardDisplay.innerHTML = '<span style="color: #ffa726;">⚠️ In Bunker</span>';
+    } else if (currentHazard === 'tree') {
+        hazardDisplay.innerHTML = '<span style="color: #66bb6a;">🌲 Behind Trees</span>';
+    } else {
+        hazardDisplay.innerHTML = '';
+    }
     
     const clubSelect = document.getElementById('club-select');
     clubSelect.innerHTML = '';
@@ -177,7 +248,15 @@ function renderContactMenu() {
     const clubIndex = clubSelect.value;
     const clubDist = myClubs[clubIndex].distance;
 
-    if (distanceToPin < clubDist) {
+    if (currentHazard === 'tree') {
+        container.innerHTML = `
+            <div class="radio-group vertical">
+                <input type="radio" id="tree1" name="contact" value="tree-hard"><label class="color-red" for="tree1">Bump & Run - Hard</label>
+                <input type="radio" id="tree2" name="contact" value="tree-perfect" checked><label class="color-green" for="tree2">Bump & Run - Perfect</label>
+                <input type="radio" id="tree3" name="contact" value="tree-soft"><label class="color-orange" for="tree3">Bump & Run - Soft</label>
+            </div>
+        `;
+    } else if (distanceToPin < clubDist) {
         container.innerHTML = `
             <div class="radio-group vertical">
                 <input type="radio" id="chip1" name="contact" value="way-long"><label class="color-red" for="chip1">Way Too Long</label>
@@ -209,7 +288,9 @@ function updateTargetPercentageDisplay() {
     const clubIndex = clubSelect.value;
     const clubDist = myClubs[clubIndex].distance;
 
-    if (distanceToPin < clubDist) {
+    if (currentHazard === 'tree') {
+        displayEl.innerText = `Forced Bump & Run Punch Out`;
+    } else if (distanceToPin < clubDist) {
         const targetPercent = Math.round((distanceToPin / clubDist) * 100);
         displayEl.innerText = `Target Swing Power: ${targetPercent}%`;
     } else {
@@ -235,6 +316,7 @@ function hitShot() {
     
     const startingDistanceOfShot = distanceToPin;
     const isPartialShot = distanceToPin < clubDist;
+    const previousHazard = currentHazard; 
 
     // --- 2D GEOMETRY MATH ENGINE ---
     let angleDegrees = 0;
@@ -255,7 +337,14 @@ function hitShot() {
 
     let rawShotDistance = 0;
 
-    if (isPartialShot) {
+    if (currentHazard === 'tree') {
+        let powerMod = 0.25; 
+        if (contact === 'tree-hard') powerMod = 0.45;
+        if (contact === 'tree-soft') powerMod = 0.10;
+        
+        rawShotDistance = Math.round(clubDist * powerMod);
+    } 
+    else if (isPartialShot) {
         let powerMod = 1.0;
         if (contact === 'way-long') powerMod = 1.60;
         if (contact === 'long') powerMod = 1.30;
@@ -283,12 +372,38 @@ function hitShot() {
 
         rawShotDistance = Math.round(clubDist * contactMod);
     }
+
+    if (currentHazard === 'bunker' && contact !== 'perfect') {
+        let bunkerPenalty = 0.40 + (Math.random() * 0.40);
+        rawShotDistance = Math.round(rawShotDistance * bunkerPenalty);
+    }
     
     let newDistSquared = Math.pow(distanceToPin, 2) + Math.pow(rawShotDistance, 2) - (2 * distanceToPin * rawShotDistance * Math.cos(angleRadians));
     distanceToPin = Math.round(Math.sqrt(newDistSquared));
     
-    const modeString = isPartialShot ? "Controlled" : "Swung";
-    const logEntry = `Shot ${strokesThisHole}: ${clubName}. ${modeString} ${rawShotDistance}y (Offline angle: ${angleDegrees}°). <br>`;
+    currentHazard = 'none'; 
+    let nextHazardLog = "";
+
+    if (obstaclesEnabled && distanceToPin > 15 && absDir > 0) {
+        let hazardChance = 0;
+        if (absDir === 1) hazardChance = 0.15; 
+        else if (absDir === 2) hazardChance = 0.40; 
+        else if (absDir === 3) hazardChance = 0.70; 
+
+        if (Math.random() < hazardChance) {
+            currentHazard = (Math.random() < 0.5) ? 'bunker' : 'tree';
+            if (currentHazard === 'bunker') nextHazardLog = " ⚠️ Dropped into a bunker!";
+            if (currentHazard === 'tree') nextHazardLog = " 🌲 Landed behind a tree!";
+        }
+    }
+
+    let modeString = isPartialShot ? "Controlled" : "Swung";
+    if (previousHazard === 'tree') modeString = "Punched out";
+    
+    let preHazardLog = "";
+    if (previousHazard === 'bunker') preHazardLog = " (From Bunker)";
+
+    const logEntry = `Shot ${strokesThisHole}: ${clubName}. ${modeString} ${rawShotDistance}y (Offline angle: ${angleDegrees}°)${preHazardLog}.${nextHazardLog} <br>`;
     document.getElementById('shot-log').innerHTML = logEntry + document.getElementById('shot-log').innerHTML;
 
     updateUI();
