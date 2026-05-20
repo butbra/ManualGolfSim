@@ -10,10 +10,15 @@
 
 <div class="container" id="config-screen">
     <h1>Club Config</h1>
-    <p style="text-align: center; color: #aaa; font-size: 0.9em;">Set your standard distances. These will be saved for your round.</p>
+    <p style="text-align: center; color: #aaa; font-size: 0.9em;">Set your standard distances.</p>
     
     <div class="config-grid" id="club-inputs">
         </div>
+
+    <div class="toggle-container">
+        <input type="checkbox" id="disable-driver">
+        <label for="disable-driver">Disable Driver for Round</label>
+    </div>
     
     <button class="primary" onclick="startGame()">Save & Start Round</button>
 </div>
@@ -34,26 +39,22 @@
         <div class="ball" id="ball-icon"></div>
     </div>
 
-    <label class="section-title" for="club-select">Current Club (Auto-Selected)</label>
+    <label class="section-title" for="club-select">Current Club</label>
     <select id="club-select"></select>
 
-    <label class="section-title">Direction (Horizontal)</label>
+    <label class="section-title">Direction</label>
     <div class="radio-group horizontal">
-        <input type="radio" id="dir1" name="direction" value="way-left"><label for="dir1">Way L</label>
-        <input type="radio" id="dir2" name="direction" value="slight-left"><label for="dir2">Slight L</label>
-        <input type="radio" id="dir3" name="direction" value="straight" checked><label for="dir3">Straight</label>
-        <input type="radio" id="dir4" name="direction" value="slight-right"><label for="dir4">Slight R</label>
-        <input type="radio" id="dir5" name="direction" value="way-right"><label for="dir5">Way R</label>
+        <input type="radio" id="dir-3" name="direction" value="-3"><label class="color-red" for="dir-3">L</label>
+        <input type="radio" id="dir-2" name="direction" value="-2"><label class="color-orange" for="dir-2">L</label>
+        <input type="radio" id="dir-1" name="direction" value="-1"><label class="color-yellow" for="dir-1">L</label>
+        <input type="radio" id="dir0" name="direction" value="0" checked><label class="color-green" for="dir0">-</label>
+        <input type="radio" id="dir1" name="direction" value="1"><label class="color-yellow" for="dir1">R</label>
+        <input type="radio" id="dir2" name="direction" value="2"><label class="color-orange" for="dir2">R</label>
+        <input type="radio" id="dir3" name="direction" value="3"><label class="color-red" for="dir3">R</label>
     </div>
 
-    <label class="section-title">Contact (Vertical)</label>
-    <div class="radio-group vertical">
-        <input type="radio" id="con1" name="contact" value="perfect" checked><label for="con1">Perfect (Full Dist)</label>
-        <input type="radio" id="con2" name="contact" value="good"><label for="con2">Good (~90%)</label>
-        <input type="radio" id="con3" name="contact" value="subpar"><label for="con3">Subpar (~70%)</label>
-        <input type="radio" id="con4" name="contact" value="terrible"><label for="con4">Terrible (~40%)</label>
-        <input type="radio" id="con5" name="contact" value="topped"><label for="con5">Topped (~15%)</label>
-    </div>
+    <label class="section-title">Contact</label>
+    <div id="contact-container"></div>
 
     <button class="primary" onclick="hitShot()">SWING</button>
 
@@ -61,6 +62,5 @@
 </div>
 
 <script src="script.js"></script>
-
 </body>
 </html>
