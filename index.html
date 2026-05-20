@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Manual Golf Sim</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-sizing: border-box;
+        }
+        h1 { text-align: center; color: #4CAF50; margin-top: 0; }
+        .status-box {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        label { display: block; margin: 15px 0 5px; font-weight: bold; color: #aaa; }
+        select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background: #2a2a2a;
+            color: #fff;
+            font-size: 1em;
+        }
+        button {
+            width: 100%;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-top: 25px;
+            cursor: pointer;
+        }
+        button:active { background: #45a049; }
+        .log {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #888;
+            max-height: 150px;
+            overflow-y: auto;
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>⛳ Golf Sim</h1>
+    
+    <div class="status-box">
+        <div><strong>Hole 1 (Par 4)</strong></div>
+        <div style="font-size: 1.8em; margin: 10px 0; color: #4CAF50;" id="distance-display">400 yards</div>
+        <div id="lie-display">Location: Tee Box</div>
+    </div>
+
+    <label for="club">Select Club:</label>
+    <select id="club">
+        <option value="250">Driver (Max 250y)</option>
+        <option value="180">5-Iron (Max 180y)</option>
+        <option value="150">7-Iron (Max 150y)</option>
+        <option value="110">Pitching Wedge (Max 110y)</option>
+    </select>
+
+    <label for="contact">Contact Quality:</label>
+    <select id="contact">
+        <option value="1.0">Pure (100% Distance)</option>
+        <option value="0.8">Decent (80% Distance)</option>
+        <option value="0.5">Chunky/Thin (50% Distance)</option>
+        <option value="0.2">Topped (20% Distance)</option>
+    </select>
+
+    <label for="direction">Direction:</label>
+    <select id="direction">
+        <option value="straight">Straight</option>
+        <option value="left">Left (Hook/Pull)</option>
+        <option value="right">Right (Slice/Push)</option>
+    </select>
+
+    <button onclick="calculateShot()">SUBMIT SHOT</button>
+
+    <div class="log" id="shot-log"><strong>Shot History:</strong><br></div>
+</div>
+
+<script>
+    let distanceToPin = 400;
+    let shotCount = 0;
+
+    function calculateShot() {
+        shotCount++;
+        const maxDist = parseInt(document.getElementById('club').value);
+        const contactModifier = parseFloat(document.getElementById('contact').value);
+        const direction = document.getElementById('direction').value;
+
+        // Calculate total forward distance achieved
+        let shotDistance = Math.round(maxDist * contactModifier);
+        
+        // Penalize distance slightly for hitting wildly offline
+        if (direction !== 'straight') {
+            shotDistance = Math.round(shotDistance * 0.85);
+        }
+
+        // Subtract from remaining distance
+        distanceToPin -= shotDistance;
+
+        let lie = "Fairway";
+        if (direction === 'left' || direction === 'right') {
+            lie = "Rough 🌾";
+        }
+
+        if (distanceToPin <= 0) {
+            distanceToPin = 0;
+            lie = "On the Green! 🎯";
+        }
+
+        // Update the screen UI
+        document.getElementById('distance-display').innerText = distanceToPin + " yards";
+        document.getElementById('lie-display').innerText = "Location: " + lie;
+
+        // Add to history log
+        const logEntry = `Shot ${shotCount}: Hit ${shotDistance}y (${direction}). ${distanceToPin}y left.<br>`;
+        document.getElementById('shot-log').innerHTML += logEntry;
+
+        if (distanceToPin === 0) {
+            alert(`You reached the green in ${shotCount} shots! Nice hole!`);
+            // Reset for a new game
+            distanceToPin = 400;
+            shotCount = 0;
+            document.getElementById('distance-display').innerText = "400 yards";
+            document.getElementById('lie-display').innerText = "Location: Tee Box";
+            document.getElementById('shot-log').innerHTML = "<strong>Shot History:</strong><br>";
+        }
+    }
+</script>
+
+</body>
+</html>
