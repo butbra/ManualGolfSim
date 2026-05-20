@@ -10,6 +10,15 @@
 
 <div class="container" id="config-screen">
     <h1>Club Config</h1>
+    
+    <div style="margin-bottom: 20px; text-align: center;">
+        <label for="profile-select" style="display: block; font-weight: bold; margin-bottom: 5px; color: #fff;">Player Profile</label>
+        <select id="profile-select" onchange="loadProfileClubs()" style="width: 100%; max-width: 200px; padding: 10px; border-radius: 5px; background: #222; color: #fff; border: 1px solid #444; font-size: 1em;">
+            <option value="brandon">Brandon</option>
+            <option value="tyler">Tyler</option>
+        </select>
+    </div>
+
     <p style="text-align: center; color: #aaa; font-size: 0.9em;">Set your standard distances.</p>
     
     <div class="config-grid" id="club-inputs">
@@ -44,6 +53,8 @@
 
     <label class="section-title" for="club-select">Current Club</label>
     <select id="club-select"></select>
+    
+    <div id="target-power-display" style="text-align: center; color: #64b5f6; font-weight: bold; margin: 5px 0 15px 0; font-size: 0.95em; min-height: 1.2em;"></div>
 
     <label class="section-title">Direction</label>
     <div class="radio-group horizontal">
