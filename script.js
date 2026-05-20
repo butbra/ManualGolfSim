@@ -147,13 +147,26 @@ function hitShot() {
     const isChipping = distanceToPin < myClubs[0].distance;
 
     // --- 2D GEOMETRY MATH ENGINE ---
-    // Establish deviation angle based on left/right selection
+    // Establish deviation angle based on left/right selection using uniform distributions
     let angleDegrees = 0;
     const absDir = Math.abs(directionTier);
-    if (absDir === 1) angleDegrees = 10; // Slight
-    if (absDir === 2) angleDegrees = 20; // Normal
-    if (absDir === 3) angleDegrees = 30; // Way offline 
     
+    if (absDir === 1) {
+        // Slight miss: 10 degrees +/- 4 (Range: 6 to 14)
+        angleDegrees = 10 + (Math.random() * 8 - 4); 
+    } 
+    else if (absDir === 2) {
+        // Normal miss: 20 degrees +/- 4 (Range: 16 to 24)
+        angleDegrees = 20 + (Math.random() * 8 - 4); 
+    } 
+    else if (absDir === 3) {
+        // Way offline: 30 degrees +/- 4 (Range: 26 to 34)
+        angleDegrees = 30 + (Math.random() * 8 - 4); 
+    }
+    
+    // Round to one decimal place for a clean log
+    angleDegrees = Math.round(angleDegrees * 10) / 10;
+
     // Convert angle to radians for Math.cos()
     const angleRadians = angleDegrees * (Math.PI / 180);
 
@@ -200,7 +213,7 @@ function hitShot() {
     distanceToPin = Math.round(Math.sqrt(newDistSquared));
     
     const modeString = isChipping ? "Chipped" : "Swung";
-    const logEntry = `Shot ${strokesThisHole}: ${clubName}. ${modeString} ${rawShotDistance}y (Total offline angle: ${angleDegrees}°). <br>`;
+    const logEntry = `Shot ${strokesThisHole}: ${clubName}. ${modeString} ${rawShotDistance}y (Offline angle: ${angleDegrees}°). <br>`;
     document.getElementById('shot-log').innerHTML = logEntry + document.getElementById('shot-log').innerHTML;
 
     updateUI();
