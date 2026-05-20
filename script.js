@@ -171,11 +171,24 @@ function hitShot() {
 
         rawShotDistance = Math.round(distanceToPin * powerMod);
     } else {
-        // Normal swing logic scales based on club max distance
+        // Normal swing logic using probabilistic distributions
         let contactMod = 1.0;
-        if (contact === 'good') contactMod = 0.90;
-        if (contact === 'subpar') contactMod = 0.70;
-        if (contact === 'terrible') contactMod = 0.40;
+        
+        if (contact === 'perfect') {
+            contactMod = 1.0; 
+        } 
+        else if (contact === 'good') {
+            // Triangle distribution: Peaks strongly at 0.90. Range: 0.80 to 1.00
+            contactMod = 0.80 + ((Math.random() + Math.random()) * 0.10);
+        } 
+        else if (contact === 'subpar') {
+            // Uniform distribution: Evenly spread anywhere between 0.60 and 0.80
+            contactMod = 0.60 + (Math.random() * 0.20);
+        } 
+        else if (contact === 'terrible') {
+            // Uniform distribution: Evenly spread anywhere between 0.20 and 0.50
+            contactMod = 0.20 + (Math.random() * 0.30);
+        }
 
         rawShotDistance = Math.round(clubDist * contactMod);
     }
