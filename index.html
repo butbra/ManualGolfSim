@@ -3,37 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Manual Golf Sim</title>
+    <title>Manual Golf Sim Pro</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #121212;
             color: #ffffff;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
         .container {
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
             background: #1e1e1e;
             padding: 20px;
             border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             box-sizing: border-box;
         }
-        h1 { text-align: center; color: #4CAF50; margin-top: 0; }
-        .status-box {
+        h1, h2, h3 { text-align: center; color: #4CAF50; margin-top: 0; }
+        
+        /* Utility */
+        .hidden { display: none !important; }
+        
+        /* Config Screen */
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .config-item input {
+            width: 50px;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background: #111;
+            color: #fff;
+            text-align: center;
+        }
+
+        /* Top HUD */
+        .hud {
+            display: flex;
+            justify-content: space-between;
             background: #2a2a2a;
             padding: 15px;
             border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 1.1em;
+            margin-bottom: 15px;
+            font-weight: bold;
         }
-        label { display: block; margin: 15px 0 5px; font-weight: bold; color: #aaa; }
+        .hud div { font-size: 1.1em; }
+        .score { color: #FFA500; }
+
+        /* Visualization */
+        .hole-visual {
+            height: 40px;
+            background: linear-gradient(to right, #4CAF50 85%, #2E7D32 15%);
+            border-radius: 20px;
+            position: relative;
+            margin-bottom: 20px;
+            border: 2px solid #333;
+        }
+        .flag {
+            position: absolute;
+            right: 10px;
+            top: 5px;
+            font-size: 20px;
+        }
+        .ball {
+            position: absolute;
+            left: 0%;
+            top: 10px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            transition: left 0.5s ease-out;
+        }
+
+        /* Shot Inputs */
+        label.section-title { display: block; margin: 15px 0 5px; font-weight: bold; color: #aaa; text-align: center;}
         select {
             width: 100%;
             padding: 12px;
@@ -41,120 +103,304 @@
             border: 1px solid #333;
             background: #2a2a2a;
             color: #fff;
-            font-size: 1em;
+            font-size: 1.1em;
+            text-align: center;
         }
-        button {
+
+        /* Radio Button Grids styled as Tap Buttons */
+        .radio-group {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .radio-group.horizontal { flex-direction: row; }
+        .radio-group.vertical { flex-direction: column; }
+        
+        .radio-group input[type="radio"] { display: none; }
+        .radio-group label {
+            flex: 1;
+            background: #333;
+            color: #ccc;
+            text-align: center;
+            padding: 12px 5px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .radio-group input[type="radio"]:checked + label {
+            background: #4CAF50;
+            color: white;
+            font-weight: bold;
+            border-color: #fff;
+        }
+
+        button.primary {
             width: 100%;
             background: #4CAF50;
             color: white;
             border: none;
             padding: 15px;
             border-radius: 8px;
-            font-size: 1.1em;
+            font-size: 1.2em;
             font-weight: bold;
-            margin-top: 25px;
+            margin-top: 15px;
             cursor: pointer;
         }
-        button:active { background: #45a049; }
+        button.primary:active { background: #45a049; }
+
         .log {
-            margin-top: 20px;
+            margin-top: 15px;
             font-size: 0.9em;
             color: #888;
-            max-height: 150px;
+            max-height: 120px;
             overflow-y: auto;
             background: #1a1a1a;
             padding: 10px;
             border-radius: 8px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>⛳ Golf Sim</h1>
+<div class="container" id="config-screen">
+    <h1>Club Config</h1>
+    <p style="text-align: center; color: #aaa; font-size: 0.9em;">Set your standard distances. These will be saved for your round.</p>
     
-    <div class="status-box">
-        <div><strong>Hole 1 (Par 4)</strong></div>
-        <div style="font-size: 1.8em; margin: 10px 0; color: #4CAF50;" id="distance-display">400 yards</div>
-        <div id="lie-display">Location: Tee Box</div>
+    <div class="config-grid" id="club-inputs">
+        </div>
+    
+    <button class="primary" onclick="startGame()">Save & Start Round</button>
+</div>
+
+<div class="container hidden" id="play-screen">
+    <div class="hud">
+        <div id="hole-info">Hole 1</div>
+        <div id="par-info">Par 4</div>
+        <div class="score" id="score-info">E</div>
     </div>
 
-    <label for="club">Select Club:</label>
-    <select id="club">
-        <option value="250">Driver (Max 250y)</option>
-        <option value="180">5-Iron (Max 180y)</option>
-        <option value="150">7-Iron (Max 150y)</option>
-        <option value="110">Pitching Wedge (Max 110y)</option>
-    </select>
+    <div style="text-align: center; font-size: 2.5em; font-weight: bold; color: #fff; margin: 10px 0;" id="distance-display">
+        400y
+    </div>
 
-    <label for="contact">Contact Quality:</label>
-    <select id="contact">
-        <option value="1.0">Pure (100% Distance)</option>
-        <option value="0.8">Decent (80% Distance)</option>
-        <option value="0.5">Chunky/Thin (50% Distance)</option>
-        <option value="0.2">Topped (20% Distance)</option>
-    </select>
+    <div class="hole-visual">
+        <div class="flag">⛳</div>
+        <div class="ball" id="ball-icon"></div>
+    </div>
 
-    <label for="direction">Direction:</label>
-    <select id="direction">
-        <option value="straight">Straight</option>
-        <option value="left">Left (Hook/Pull)</option>
-        <option value="right">Right (Slice/Push)</option>
-    </select>
+    <label class="section-title" for="club-select">Current Club (Auto-Selected)</label>
+    <select id="club-select"></select>
 
-    <button onclick="calculateShot()">SUBMIT SHOT</button>
+    <label class="section-title">Direction (Horizontal)</label>
+    <div class="radio-group horizontal">
+        <input type="radio" id="dir1" name="direction" value="way-left"><label for="dir1">Way L</label>
+        <input type="radio" id="dir2" name="direction" value="slight-left"><label for="dir2">Slight L</label>
+        <input type="radio" id="dir3" name="direction" value="straight" checked><label for="dir3">Straight</label>
+        <input type="radio" id="dir4" name="direction" value="slight-right"><label for="dir4">Slight R</label>
+        <input type="radio" id="dir5" name="direction" value="way-right"><label for="dir5">Way R</label>
+    </div>
 
-    <div class="log" id="shot-log"><strong>Shot History:</strong><br></div>
+    <label class="section-title">Contact (Vertical)</label>
+    <div class="radio-group vertical">
+        <input type="radio" id="con1" name="contact" value="perfect" checked><label for="con1">Perfect (Full Dist)</label>
+        <input type="radio" id="con2" name="contact" value="good"><label for="con2">Good (~90%)</label>
+        <input type="radio" id="con3" name="contact" value="subpar"><label for="con3">Subpar (~70%)</label>
+        <input type="radio" id="con4" name="contact" value="terrible"><label for="con4">Terrible (~40%)</label>
+        <input type="radio" id="con5" name="contact" value="topped"><label for="con5">Topped (~15%)</label>
+    </div>
+
+    <button class="primary" onclick="hitShot()">SWING</button>
+
+    <div class="log" id="shot-log">Round Started.</div>
 </div>
 
 <script>
-    let distanceToPin = 400;
-    let shotCount = 0;
+    // --- DATA & STATE ---
+    const defaultClubs = [
+        { name: "60 Degree", default: 70 },
+        { name: "52 Degree", default: 110 },
+        { name: "Pitching Wedge", default: 125 },
+        { name: "9 Iron", default: 140 },
+        { name: "8 Iron", default: 155 },
+        { name: "7 Iron", default: 170 },
+        { name: "6 Iron", default: 185 },
+        { name: "5 Iron", default: 200 },
+        { name: "4 Iron", default: 215 },
+        { name: "4 Hybrid", default: 220 },
+        { name: "3 Wood", default: 235 },
+        { name: "Driver", default: 285 }
+    ];
 
-    function calculateShot() {
-        shotCount++;
-        const maxDist = parseInt(document.getElementById('club').value);
-        const contactModifier = parseFloat(document.getElementById('contact').value);
-        const direction = document.getElementById('direction').value;
+    const course = [
+        { hole: 1, par: 4, dist: 380 },
+        { hole: 2, par: 5, dist: 510 },
+        { hole: 3, par: 3, dist: 165 },
+        { hole: 4, par: 4, dist: 400 },
+        { hole: 5, par: 4, dist: 390 },
+        { hole: 6, par: 3, dist: 185 },
+        { hole: 7, par: 4, dist: 420 },
+        { hole: 8, par: 5, dist: 535 },
+        { hole: 9, par: 4, dist: 410 }
+    ]; // Total Par 36
 
-        // Calculate total forward distance achieved
-        let shotDistance = Math.round(maxDist * contactModifier);
+    let myClubs = [];
+    let currentHoleIndex = 0;
+    let distanceToPin = 0;
+    let holeStartDist = 0;
+    let strokesThisHole = 0;
+    let totalScoreVsPar = 0;
+
+    // --- INITIALIZATION ---
+    window.onload = () => {
+        const clubInputsDiv = document.getElementById('club-inputs');
+        defaultClubs.forEach((club, index) => {
+            clubInputsDiv.innerHTML += `
+                <div class="config-item">
+                    <span>${club.name}</span>
+                    <input type="number" id="club-${index}" value="${club.default}">
+                </div>
+            `;
+        });
+    };
+
+    function startGame() {
+        // Save club configs
+        myClubs = [];
+        defaultClubs.forEach((club, index) => {
+            const dist = parseInt(document.getElementById(`club-${index}`).value) || club.default;
+            myClubs.push({ name: club.name, distance: dist });
+        });
         
-        // Penalize distance slightly for hitting wildly offline
-        if (direction !== 'straight') {
-            shotDistance = Math.round(shotDistance * 0.85);
+        // Populate Dropdown
+        const clubSelect = document.getElementById('club-select');
+        clubSelect.innerHTML = '';
+        myClubs.forEach((club, index) => {
+            clubSelect.innerHTML += `<option value="${index}">${club.name} (${club.distance}y)</option>`;
+        });
+
+        // Swap Screens
+        document.getElementById('config-screen').classList.add('hidden');
+        document.getElementById('play-screen').classList.remove('hidden');
+
+        loadHole(0);
+    }
+
+    function loadHole(index) {
+        if (index >= course.length) {
+            alert(`Round Complete! Final Score: ${formatScore(totalScoreVsPar)}`);
+            location.reload(); // Restart completely
+            return;
         }
+        
+        currentHoleIndex = index;
+        strokesThisHole = 0;
+        const holeData = course[currentHoleIndex];
+        distanceToPin = holeData.dist;
+        holeStartDist = holeData.dist;
 
-        // Subtract from remaining distance
-        distanceToPin -= shotDistance;
+        // Reset UI
+        document.getElementById('hole-info').innerText = `Hole ${holeData.hole}`;
+        document.getElementById('par-info').innerText = `Par ${holeData.par}`;
+        document.getElementById('score-info').innerText = formatScore(totalScoreVsPar);
+        
+        // Reset Inputs to Straight / Perfect
+        document.getElementById('dir3').checked = true;
+        document.getElementById('con1').checked = true;
+        document.getElementById('shot-log').innerHTML = `Teeing off on Hole ${holeData.hole}...`;
 
-        let lie = "Fairway";
-        if (direction === 'left' || direction === 'right') {
-            lie = "Rough 🌾";
+        updateUI();
+    }
+
+    function autoSelectClub() {
+        const clubSelect = document.getElementById('club-select');
+        let selectedIndex = myClubs.length - 1; // Default to Driver (longest)
+        
+        // Find the club that goes closest to the remaining distance without going way over
+        for (let i = 0; i < myClubs.length; i++) {
+            if (myClubs[i].distance >= distanceToPin) {
+                selectedIndex = i;
+                break;
+            }
         }
+        clubSelect.value = selectedIndex;
+    }
 
-        if (distanceToPin <= 0) {
-            distanceToPin = 0;
-            lie = "On the Green! 🎯";
+    function formatScore(score) {
+        if (score === 0) return "E";
+        if (score > 0) return `+${score}`;
+        return score.toString();
+    }
+
+    function updateUI() {
+        document.getElementById('distance-display').innerText = distanceToPin + "y";
+        autoSelectClub();
+        
+        // Update Ball Visualization
+        const percentCovered = ((holeStartDist - distanceToPin) / holeStartDist) * 100;
+        let visualPercent = Math.max(0, Math.min(percentCovered, 95)); // Keep it in bounds
+        document.getElementById('ball-icon').style.left = visualPercent + '%';
+    }
+
+    function hitShot() {
+        strokesThisHole++;
+        
+        // Get selections
+        const clubIndex = document.getElementById('club-select').value;
+        const clubDist = myClubs[clubIndex].distance;
+        const clubName = myClubs[clubIndex].name;
+        
+        const direction = document.querySelector('input[name="direction"]:checked').value;
+        const contact = document.querySelector('input[name="contact"]:checked').value;
+
+        // --- MATH ENGINE ---
+        let contactMod = 1.0;
+        if (contact === 'good') contactMod = 0.90;
+        if (contact === 'subpar') contactMod = 0.70;
+        if (contact === 'terrible') contactMod = 0.40;
+        if (contact === 'topped') contactMod = 0.15;
+
+        let dirMod = 1.0;
+        if (direction === 'slight-left' || direction === 'slight-right') dirMod = 0.95;
+        if (direction === 'way-left' || direction === 'way-right') dirMod = 0.80;
+
+        // Calculate shot
+        let shotDistance = Math.round(clubDist * contactMod * dirMod);
+        
+        // Absolute value logic: if they hit it further than the pin, it subtracts to negative, then becomes positive remaining (over the green)
+        let newDist = Math.abs(distanceToPin - shotDistance);
+        
+        const logEntry = `Shot ${strokesThisHole}: ${clubName}. Hit ${shotDistance}y. <br>`;
+        document.getElementById('shot-log').innerHTML = logEntry + document.getElementById('shot-log').innerHTML;
+
+        distanceToPin = newDist;
+        updateUI();
+
+        // Check if on green / in hole (Let's say <= 20 yards triggers green logic)
+        if (distanceToPin <= 20) {
+            handleGreen();
         }
+    }
 
-        // Update the screen UI
-        document.getElementById('distance-display').innerText = distanceToPin + " yards";
-        document.getElementById('lie-display').innerText = "Location: " + lie;
+    function handleGreen() {
+        // Auto-putt logic based on proximity
+        let putts = 2; // Default 2 putt
+        if (distanceToPin <= 3) putts = 1;
+        if (distanceToPin > 15) putts = 3;
+        
+        strokesThisHole += putts;
+        
+        const holeData = course[currentHoleIndex];
+        const scoreThisHole = strokesThisHole - holeData.par;
+        totalScoreVsPar += scoreThisHole;
 
-        // Add to history log
-        const logEntry = `Shot ${shotCount}: Hit ${shotDistance}y (${direction}). ${distanceToPin}y left.<br>`;
-        document.getElementById('shot-log').innerHTML += logEntry;
-
-        if (distanceToPin === 0) {
-            alert(`You reached the green in ${shotCount} shots! Nice hole!`);
-            // Reset for a new game
-            distanceToPin = 400;
-            shotCount = 0;
-            document.getElementById('distance-display').innerText = "400 yards";
-            document.getElementById('lie-display').innerText = "Location: Tee Box";
-            document.getElementById('shot-log').innerHTML = "<strong>Shot History:</strong><br>";
-        }
+        let popupMsg = `You reached the green!\n\nDistance: ${distanceToPin}y\nPutts taken: ${putts}\n\nTotal Strokes: ${strokesThisHole} (Par ${holeData.par})`;
+        
+        setTimeout(() => {
+            alert(popupMsg);
+            loadHole(currentHoleIndex + 1);
+        }, 300); // slight delay so visual updates first
     }
 </script>
 
