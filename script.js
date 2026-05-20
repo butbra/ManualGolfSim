@@ -1,11 +1,19 @@
 // --- DATA & STATE ---
-const defaultClubs = [
+const brandonClubs = [
     { name: "60 Degree", default: 70 }, { name: "52 Degree", default: 110 },
     { name: "Pitching Wedge", default: 125 }, { name: "9 Iron", default: 140 },
     { name: "8 Iron", default: 155 }, { name: "7 Iron", default: 170 },
     { name: "6 Iron", default: 185 }, { name: "5 Iron", default: 200 },
     { name: "4 Iron", default: 215 }, { name: "4 Hybrid", default: 220 },
     { name: "3 Wood", default: 235 }, { name: "Driver", default: 285 }
+];
+
+const tylerClubs = [
+    { name: "Sand Wedge", default: 90 }, { name: "Pitching Wedge", default: 110 },
+    { name: "9 Iron", default: 130 }, { name: "8 Iron", default: 145 },
+    { name: "7 Iron", default: 160 }, { name: "6 Iron", default: 170 },
+    { name: "5 Iron", default: 180 }, { name: "4 Iron", default: 190 },
+    { name: "3 Wood", default: 200 }, { name: "Driver", default: 240 }
 ];
 
 const course = [
@@ -25,8 +33,17 @@ let totalScoreVsPar = 0;
 
 // --- INITIALIZATION ---
 window.onload = () => {
+    loadProfileClubs();
+};
+
+function loadProfileClubs() {
+    const profile = document.getElementById('profile-select').value;
     const clubInputsDiv = document.getElementById('club-inputs');
-    defaultClubs.forEach((club, index) => {
+    clubInputsDiv.innerHTML = '';
+    
+    const clubsToLoad = (profile === 'brandon') ? brandonClubs : tylerClubs;
+    
+    clubsToLoad.forEach((club, index) => {
         clubInputsDiv.innerHTML += `
             <div class="config-item">
                 <span>${club.name}</span>
@@ -34,18 +51,22 @@ window.onload = () => {
             </div>
         `;
     });
-};
+}
 
 function startGame() {
     myClubs = [];
+    const profile = document.getElementById('profile-select').value;
+    const clubsToLoad = (profile === 'brandon') ? brandonClubs : tylerClubs;
+
     const disableDriver = document.getElementById('disable-driver').checked;
     const disable3Wood = document.getElementById('disable-3wood').checked;
 
-    defaultClubs.forEach((club, index) => {
+    clubsToLoad.forEach((club, index) => {
         if (disableDriver && club.name === "Driver") return; 
         if (disable3Wood && club.name === "3 Wood") return; 
         
-        const dist = parseInt(document.getElementById(`club-${index}`).value) || club.default;
+        const distInput = document.getElementById(`club-${index}`);
+        const dist = distInput ? (parseInt(distInput.value) || club.default) : club.default;
         myClubs.push({ name: club.name, distance: dist });
     });
     
@@ -90,10 +111,14 @@ function updateUI() {
     }
     clubSelect.value = selectedIndex;
 
-    // Force contact menu to re-render if user manually changes clubs
-    clubSelect.onchange = renderContactMenu;
+    // Instantly refresh calculations when toggling between clubs manually
+    clubSelect.onchange = () => {
+        renderContactMenu();
+        updateTargetPercentageDisplay();
+    };
 
     renderContactMenu();
+    updateTargetPercentageDisplay();
     
     const percentCovered = ((holeStartDist - distanceToPin) / holeStartDist) * 100;
     let visualPercent = Math.max(0, Math.min(percentCovered, 95));
@@ -106,14 +131,13 @@ function renderContactMenu() {
     const container = document.getElementById('contact-container');
     const clubSelect = document.getElementById('club-select');
     
-    // Safety check for initial setup timing
     if (!clubSelect || clubSelect.value === "") return;
 
     const clubIndex = clubSelect.value;
     const clubDist = myClubs[clubIndex].distance;
 
-    // If distance to pin is LESS than the selected club's capacity, show the centered perfect distance layout
     if (distanceToPin < clubDist) {
+        // SCALED / CONTROL TOUCH INTERFACE
         container.innerHTML = `
             <div class="radio-group vertical">
                 <input type="radio" id="chip1" name="contact" value="way-long"><label class="color-red" for="chip1">Way Too Long</label>
@@ -126,7 +150,7 @@ function renderContactMenu() {
             </div>
         `;
     } else {
-        // FULL SWING MODE (Distance to pin matches or exceeds selected club max capacity)
+        // STANDARD FULL SWING INTERFACE
         container.innerHTML = `
             <div class="radio-group vertical">
                 <input type="radio" id="con1" name="contact" value="perfect" checked><label class="color-green" for="con1">Perfect Contact</label>
@@ -135,6 +159,22 @@ function renderContactMenu() {
                 <input type="radio" id="con4" name="contact" value="terrible"><label class="color-red" for="con4">Terrible Contact</label>
             </div>
         `;
+    }
+}
+
+function updateTargetPercentageDisplay() {
+    const clubSelect = document.getElementById('club-select');
+    const displayEl = document.getElementById('target-power-display');
+    if (!clubSelect || !displayEl || clubSelect.value === "") return;
+
+    const clubIndex = clubSelect.value;
+    const clubDist = myClubs[clubIndex].distance;
+
+    if (distanceToPin < clubDist) {
+        const targetPercent = Math.round((distanceToPin / clubDist) * 100);
+        displayEl.innerText = `Target Swing Power: ${targetPercent}%`;
+    } else {
+        displayEl.innerText = "";
     }
 }
 
@@ -154,7 +194,8 @@ function hitShot() {
     const directionTier = parseInt(document.querySelector('input[name="direction"]:checked').value);
     const contact = document.querySelector('input[name="contact"]:checked').value;
     
-    // Check if we are running a controlled distance scaling calculation
+    // Save state before hitting to track special green rules
+    const startingDistanceOfShot = distanceToPin;
     const isPartialShot = distanceToPin < clubDist;
 
     // --- 2D GEOMETRY MATH ENGINE ---
@@ -177,7 +218,7 @@ function hitShot() {
     let rawShotDistance = 0;
 
     if (isPartialShot) {
-        // Controlled touch calculations scaled directly around pin target distance
+        // Controlled touch scaling calculations around target pin
         let powerMod = 1.0;
         if (contact === 'way-long') powerMod = 1.60;
         if (contact === 'long') powerMod = 1.30;
@@ -188,11 +229,12 @@ function hitShot() {
 
         rawShotDistance = Math.round(distanceToPin * powerMod);
     } else {
-        // Full standard swing probabilistic distribution mechanics
+        // Full standard swing probabilistic distributions
         let contactMod = 1.0;
         
         if (contact === 'perfect') {
-            contactMod = 1.0; 
+            // Adds a small layer of variability to full swing perfect hits (98% to 102%)
+            contactMod = 0.98 + (Math.random() * 0.04); 
         } 
         else if (contact === 'good') {
             contactMod = 0.80 + ((Math.random() + Math.random()) * 0.10);
@@ -207,7 +249,7 @@ function hitShot() {
         rawShotDistance = Math.round(clubDist * contactMod);
     }
     
-    // LAW OF COSINES 2D TRIANGULATION ENGINE
+    // LAW OF COSINES 2D TRIANGULATION
     let newDistSquared = Math.pow(distanceToPin, 2) + Math.pow(rawShotDistance, 2) - (2 * distanceToPin * rawShotDistance * Math.cos(angleRadians));
     distanceToPin = Math.round(Math.sqrt(newDistSquared));
     
@@ -219,12 +261,15 @@ function hitShot() {
 
     // Check if on green (15 yards threshold)
     if (distanceToPin <= 15) {
-        handleGreen();
+        // Player is only eligible for a 1-putt if the shot originated from less than 30 yards away
+        const eligibleForOnePutt = startingDistanceOfShot < 30;
+        handleGreen(eligibleForOnePutt);
     }
 }
 
-function handleGreen() {
-    let putts = (distanceToPin <= 1) ? 1 : 2;
+function handleGreen(eligibleForOnePutt) {
+    // Only award 1 putt if the ball landed within 1 yard AND the shot came from less than 30 yards out
+    let putts = (distanceToPin <= 1 && eligibleForOnePutt) ? 1 : 2;
     
     strokesThisHole += putts;
     const scoreThisHole = strokesThisHole - course[currentHoleIndex].par;
