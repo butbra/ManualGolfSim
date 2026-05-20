@@ -16,15 +16,16 @@ const tylerClubs = [
     { name: "3 Wood", default: 200 }, { name: "Driver", default: 240 }
 ];
 
-const course = [
-    { hole: 1, par: 4, dist: 380 }, { hole: 2, par: 5, dist: 510 },
-    { hole: 3, par: 3, dist: 165 }, { hole: 4, par: 4, dist: 400 },
-    { hole: 5, par: 4, dist: 390 }, { hole: 6, par: 3, dist: 185 },
-    { hole: 7, par: 4, dist: 420 }, { hole: 8, par: 5, dist: 535 },
-    { hole: 9, par: 4, dist: 410 }
+const baseCourse = [
+    { par: 4, dist: 380 }, { par: 5, dist: 510 },
+    { par: 3, dist: 165 }, { par: 4, dist: 400 },
+    { par: 4, dist: 390 }, { par: 3, dist: 185 },
+    { par: 4, dist: 420 }, { par: 5, dist: 535 },
+    { par: 4, dist: 410 }
 ]; 
 
 let myClubs = [];
+let activeCourse = []; // Dynamically built randomized array
 let currentHoleIndex = 0;
 let distanceToPin = 0;
 let holeStartDist = 0;
@@ -52,7 +53,6 @@ function loadProfileClubs() {
         `;
     });
 
-    // Automatically toggle checkboxes based on the selected profile
     const disableDriverCheckbox = document.getElementById('disable-driver');
     const disable3WoodCheckbox = document.getElementById('disable-3wood');
     
@@ -65,6 +65,16 @@ function loadProfileClubs() {
             disable3WoodCheckbox.checked = false;
         }
     }
+}
+
+// Fisher-Yates Randomization Algorithm
+function shuffleArray(array) {
+    let shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
 }
 
 function startGame() {
@@ -83,6 +93,24 @@ function startGame() {
         const dist = distInput ? (parseInt(distInput.value) || club.default) : club.default;
         myClubs.push({ name: club.name, distance: dist });
     });
+
+    // Generate Randomized Course Routing Map
+    const roundLength = parseInt(document.getElementById('round-length').value) || 9;
+    activeCourse = [];
+
+    // Shuffle front 9
+    let front9 = shuffleArray(baseCourse);
+    front9.forEach((holeData, index) => {
+        activeCourse.push({ hole: index + 1, par: holeData.par, dist: holeData.dist });
+    });
+
+    // Shuffle back 9 if 18 holes are requested
+    if (roundLength === 18) {
+        let back9 = shuffleArray(baseCourse);
+        back9.forEach((holeData, index) => {
+            activeCourse.push({ hole: index + 10, par: holeData.par, dist: holeData.dist });
+        });
+    }
     
     document.getElementById('config-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
@@ -91,7 +119,7 @@ function startGame() {
 }
 
 function loadHole(index) {
-    if (index >= course.length) {
+    if (index >= activeCourse.length) {
         alert(`Round Complete! Final Score: ${formatScore(totalScoreVsPar)}`);
         location.reload(); 
         return;
@@ -99,13 +127,13 @@ function loadHole(index) {
     
     currentHoleIndex = index;
     strokesThisHole = 0;
-    distanceToPin = course[currentHoleIndex].dist;
-    holeStartDist = course[currentHoleIndex].dist;
+    distanceToPin = activeCourse[currentHoleIndex].dist;
+    holeStartDist = activeCourse[currentHoleIndex].dist;
 
-    document.getElementById('hole-info').innerText = `Hole ${course[currentHoleIndex].hole}`;
-    document.getElementById('par-info').innerText = `Par ${course[currentHoleIndex].par}`;
+    document.getElementById('hole-info').innerText = `Hole ${activeCourse[currentHoleIndex].hole} of ${activeCourse.length}`;
+    document.getElementById('par-info').innerText = `Par ${activeCourse[currentHoleIndex].par}`;
     document.getElementById('score-info').innerText = formatScore(totalScoreVsPar);
-    document.getElementById('shot-log').innerHTML = `Teeing off on Hole ${course[currentHoleIndex].hole}...`;
+    document.getElementById('shot-log').innerHTML = `Teeing off on Hole ${activeCourse[currentHoleIndex].hole}...`;
 
     updateUI();
 }
@@ -275,10 +303,10 @@ function handleGreen(eligibleForOnePutt) {
     let putts = (distanceToPin <= 1 && eligibleForOnePutt) ? 1 : 2;
     
     strokesThisHole += putts;
-    const scoreThisHole = strokesThisHole - course[currentHoleIndex].par;
+    const scoreThisHole = strokesThisHole - activeCourse[currentHoleIndex].par;
     totalScoreVsPar += scoreThisHole;
 
-    let popupMsg = `You reached the green!\n\nDistance remaining: ${distanceToPin}y\nPutts taken: ${putts}\n\nTotal Strokes: ${strokesThisHole} (Par ${course[currentHoleIndex].par})`;
+    let popupMsg = `You reached the green!\n\nDistance remaining: ${distanceToPin}y\nPutts taken: ${putts}\n\nTotal Strokes: ${strokesThisHole} (Par ${activeCourse[currentHoleIndex].par})`;
     
     setTimeout(() => {
         alert(popupMsg);
