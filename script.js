@@ -192,8 +192,8 @@ function hitShot() {
 
     updateUI();
 
-    // Check if on green (20 yards threshold)
-    if (distanceToPin <= 20) {
+    // Check if on green (15 yards threshold)
+    if (distanceToPin <= 15) {
         handleGreen();
     }
 }
