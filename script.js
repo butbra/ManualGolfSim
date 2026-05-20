@@ -1,4 +1,4 @@
-// --- DATA & STATE (Config) ---
+// --- DATA & STATE ---
 const defaultClubs = [
     { name: "60 Degree", default: 70 },
     { name: "52 Degree", default: 110 },
@@ -15,16 +15,12 @@ const defaultClubs = [
 ];
 
 const course = [
-    { hole: 1, par: 4, dist: 380 },
-    { hole: 2, par: 5, dist: 510 },
-    { hole: 3, par: 3, dist: 165 },
-    { hole: 4, par: 4, dist: 400 },
-    { hole: 5, par: 4, dist: 390 },
-    { hole: 6, par: 3, dist: 185 },
-    { hole: 7, par: 4, dist: 420 },
-    { hole: 8, par: 5, dist: 535 },
+    { hole: 1, par: 4, dist: 380 }, { hole: 2, par: 5, dist: 510 },
+    { hole: 3, par: 3, dist: 165 }, { hole: 4, par: 4, dist: 400 },
+    { hole: 5, par: 4, dist: 390 }, { hole: 6, par: 3, dist: 185 },
+    { hole: 7, par: 4, dist: 420 }, { hole: 8, par: 5, dist: 535 },
     { hole: 9, par: 4, dist: 410 }
-]; // Total Par 36
+]; 
 
 let myClubs = [];
 let currentHoleIndex = 0;
@@ -47,20 +43,15 @@ window.onload = () => {
 };
 
 function startGame() {
-    // Save club configs
     myClubs = [];
+    const disableDriver = document.getElementById('disable-driver').checked;
+
     defaultClubs.forEach((club, index) => {
+        if (disableDriver && club.name === "Driver") return; // Skip driver if checked
         const dist = parseInt(document.getElementById(`club-${index}`).value) || club.default;
         myClubs.push({ name: club.name, distance: dist });
     });
     
-    // Populate Dropdown
-    const clubSelect = document.getElementById('club-select');
-    clubSelect.innerHTML = '';
-    myClubs.forEach((club, index) => {
-        clubSelect.innerHTML += `<option value="${index}">${club.name} (${club.distance}y)</option>`;
-    });
-
     // Swap Screens
     document.getElementById('config-screen').classList.add('hidden');
     document.getElementById('play-screen').classList.remove('hidden');
@@ -71,41 +62,80 @@ function startGame() {
 function loadHole(index) {
     if (index >= course.length) {
         alert(`Round Complete! Final Score: ${formatScore(totalScoreVsPar)}`);
-        location.reload(); // Restart completely
+        location.reload(); 
         return;
     }
     
     currentHoleIndex = index;
     strokesThisHole = 0;
-    const holeData = course[currentHoleIndex];
-    distanceToPin = holeData.dist;
-    holeStartDist = holeData.dist;
+    distanceToPin = course[currentHoleIndex].dist;
+    holeStartDist = course[currentHoleIndex].dist;
 
-    // Reset UI
-    document.getElementById('hole-info').innerText = `Hole ${holeData.hole}`;
-    document.getElementById('par-info').innerText = `Par ${holeData.par}`;
+    // Reset UI Texts
+    document.getElementById('hole-info').innerText = `Hole ${course[currentHoleIndex].hole}`;
+    document.getElementById('par-info').innerText = `Par ${course[currentHoleIndex].par}`;
     document.getElementById('score-info').innerText = formatScore(totalScoreVsPar);
-    
-    // Reset Inputs to Straight / Perfect
-    document.getElementById('dir3').checked = true;
-    document.getElementById('con1').checked = true;
-    document.getElementById('shot-log').innerHTML = `Teeing off on Hole ${holeData.hole}...`;
+    document.getElementById('shot-log').innerHTML = `Teeing off on Hole ${course[currentHoleIndex].hole}...`;
 
     updateUI();
 }
 
-function autoSelectClub() {
-    const clubSelect = document.getElementById('club-select');
-    let selectedIndex = myClubs.length - 1; // Default to Driver
+function updateUI() {
+    document.getElementById('distance-display').innerText = distanceToPin + "y";
     
-    // Find the club that goes closest to the remaining distance
+    // 1. Auto Select Club
+    const clubSelect = document.getElementById('club-select');
+    clubSelect.innerHTML = '';
+    let selectedIndex = myClubs.length - 1; 
+    
     for (let i = 0; i < myClubs.length; i++) {
-        if (myClubs[i].distance >= distanceToPin) {
+        clubSelect.innerHTML += `<option value="${i}">${myClubs[i].name} (${myClubs[i].distance}y)</option>`;
+        if (myClubs[i].distance >= distanceToPin && selectedIndex === myClubs.length - 1) {
             selectedIndex = i;
-            break;
         }
     }
     clubSelect.value = selectedIndex;
+
+    // 2. Render Contact Menu (Chipping vs Full Swing)
+    renderContactMenu();
+    
+    // 3. Update Ball Visuals
+    const percentCovered = ((holeStartDist - distanceToPin) / holeStartDist) * 100;
+    let visualPercent = Math.max(0, Math.min(percentCovered, 95));
+    document.getElementById('ball-icon').style.left = visualPercent + '%';
+
+    // 4. Reset Direction to straight
+    document.getElementById('dir0').checked = true;
+}
+
+function renderContactMenu() {
+    const container = document.getElementById('contact-container');
+    const minClubDist = myClubs[0].distance;
+
+    if (distanceToPin < minClubDist) {
+        // CHIPPING MODE (Yardage is less than lowest club)
+        container.innerHTML = `
+            <div class="radio-group vertical">
+                <input type="radio" id="chip1" name="contact" value="way-hard"><label class="color-red" for="chip1">Way Too Hard</label>
+                <input type="radio" id="chip2" name="contact" value="hard"><label class="color-orange" for="chip2">Too Hard</label>
+                <input type="radio" id="chip3" name="contact" value="slight-hard"><label class="color-yellow" for="chip3">Slightly Hard</label>
+                <input type="radio" id="chip4" name="contact" value="perfect" checked><label class="color-green" for="chip4">Perfect Weight</label>
+                <input type="radio" id="chip5" name="contact" value="slight-light"><label class="color-yellow" for="chip5">Slightly Light</label>
+                <input type="radio" id="chip6" name="contact" value="light"><label class="color-orange" for="chip6">Too Light</label>
+                <input type="radio" id="chip7" name="contact" value="way-light"><label class="color-red" for="chip7">Way Too Light</label>
+            </div>
+        `;
+    } else {
+        // FULL SWING MODE
+        container.innerHTML = `
+            <div class="radio-group vertical">
+                <input type="radio" id="con1" name="contact" value="perfect" checked><label class="color-green" for="con1">Perfect Contact</label>
+                <input type="radio" id="con2" name="contact" value="good"><label class="color-yellow" for="con2">Good Contact</label>
+                <input type="radio" id="con3" name="contact" value="subpar"><label class="color-orange" for="con3">Subpar Contact</label>
+                <input type="radio" id="con4" name="contact" value="terrible"><label class="color-red" for="con4">Terrible Contact</label>
+            </div>
+        `;
+    }
 }
 
 function formatScore(score) {
@@ -114,68 +144,72 @@ function formatScore(score) {
     return score.toString();
 }
 
-function updateUI() {
-    document.getElementById('distance-display').innerText = distanceToPin + "y";
-    autoSelectClub();
-    
-    // Update Ball Visualization
-    const percentCovered = ((holeStartDist - distanceToPin) / holeStartDist) * 100;
-    let visualPercent = Math.max(0, Math.min(percentCovered, 95));
-    document.getElementById('ball-icon').style.left = visualPercent + '%';
-}
-
 function hitShot() {
     strokesThisHole++;
     
-    // Get selections
     const clubIndex = document.getElementById('club-select').value;
     const clubDist = myClubs[clubIndex].distance;
     const clubName = myClubs[clubIndex].name;
     
-    const direction = document.querySelector('input[name="direction"]:checked').value;
+    const directionTier = parseInt(document.querySelector('input[name="direction"]:checked').value);
     const contact = document.querySelector('input[name="contact"]:checked').value;
+    const isChipping = distanceToPin < myClubs[0].distance;
 
     // --- MATH ENGINE ---
-    let contactMod = 1.0;
-    if (contact === 'good') contactMod = 0.90;
-    if (contact === 'subpar') contactMod = 0.70;
-    if (contact === 'terrible') contactMod = 0.40;
-    if (contact === 'topped') contactMod = 0.15;
-
+    // Calculate Direction Modifier (0 is center, 1 is yellow, 2 is orange, 3 is red)
     let dirMod = 1.0;
-    if (direction === 'slight-left' || direction === 'slight-right') dirMod = 0.95;
-    if (direction === 'way-left' || direction === 'way-right') dirMod = 0.80;
+    const absDir = Math.abs(directionTier);
+    if (absDir === 1) dirMod = 0.95; // Yellow penalty
+    if (absDir === 2) dirMod = 0.85; // Orange penalty
+    if (absDir === 3) dirMod = 0.70; // Red penalty
 
-    // Calculate shot
-    let shotDistance = Math.round(clubDist * contactMod * dirMod);
+    let shotDistance = 0;
+
+    if (isChipping) {
+        // Chipping logic (Power modifies remaining distance to pin, not club max)
+        let powerMod = 1.0;
+        if (contact === 'way-hard') powerMod = 1.50;
+        if (contact === 'hard') powerMod = 1.25;
+        if (contact === 'slight-hard') powerMod = 1.10;
+        if (contact === 'slight-light') powerMod = 0.85;
+        if (contact === 'light') powerMod = 0.65;
+        if (contact === 'way-light') powerMod = 0.40;
+
+        shotDistance = Math.round(distanceToPin * powerMod * dirMod);
+    } else {
+        // Normal swing logic
+        let contactMod = 1.0;
+        if (contact === 'good') contactMod = 0.90;
+        if (contact === 'subpar') contactMod = 0.70;
+        if (contact === 'terrible') contactMod = 0.40;
+
+        shotDistance = Math.round(clubDist * contactMod * dirMod);
+    }
     
-    let newDist = Math.abs(distanceToPin - shotDistance);
+    // Absolute distance remaining (if they hit over the green, it turns positive again)
+    distanceToPin = Math.abs(distanceToPin - shotDistance);
     
-    const logEntry = `Shot ${strokesThisHole}: ${clubName}. Hit ${shotDistance}y. <br>`;
+    const modeString = isChipping ? "Chipped" : "Swung";
+    const logEntry = `Shot ${strokesThisHole}: ${clubName}. ${modeString} ${shotDistance}y. <br>`;
     document.getElementById('shot-log').innerHTML = logEntry + document.getElementById('shot-log').innerHTML;
 
-    distanceToPin = newDist;
     updateUI();
 
-    // Check if on green
     if (distanceToPin <= 20) {
         handleGreen();
     }
 }
 
 function handleGreen() {
-    // Auto-putt logic based on proximity
     let putts = 2;
     if (distanceToPin <= 3) putts = 1;
-    if (distanceToPin > 15) putts = 3;
+    if (distanceToPin > 12) putts = 3;
     
     strokesThisHole += putts;
-    
-    const holeData = course[currentHoleIndex];
-    const scoreThisHole = strokesThisHole - holeData.par;
+    const scoreThisHole = strokesThisHole - course[currentHoleIndex].par;
     totalScoreVsPar += scoreThisHole;
 
-    let popupMsg = `You reached the green!\n\nDistance: ${distanceToPin}y\nPutts taken: ${putts}\n\nTotal Strokes: ${strokesThisHole} (Par ${holeData.par})`;
+    let popupMsg = `You reached the green!\n\nDistance remaining: ${distanceToPin}y\nPutts taken: ${putts}\n\nTotal Strokes: ${strokesThisHole} (Par ${course[currentHoleIndex].par})`;
     
     setTimeout(() => {
         alert(popupMsg);
